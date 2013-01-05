@@ -105,9 +105,6 @@ class Sample extends TemplateEntity {
         })
     }
 
-    // Prevent MappingException on injected springSecurityService
-    static transients = ['templateExtendableStringListFieldsSpringSecurityService']
-
     static mapping = {
         sort "name"
 

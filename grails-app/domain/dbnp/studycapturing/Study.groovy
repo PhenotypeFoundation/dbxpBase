@@ -53,9 +53,6 @@ class Study extends TemplateEntity {
 		// tested by SampleTests.testStudyPublish
 	}
 
-    // Prevent MappingException on injected springSecurityService
-    static transients = ['templateExtendableStringListFieldsSpringSecurityService']
-
 	// see org.dbnp.gdt.FuzzyStringMatchController and Service
 	static fuzzyStringMatchable = [
 	    "title",

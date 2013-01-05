@@ -64,9 +64,6 @@ class Subject extends TemplateEntity {
 		return name
 	}
 
-    // Prevent MappingException on injected springSecurityService
-    static transients = ['templateExtendableStringListFieldsSpringSecurityService']
-
 	/**
 	 * Returns a human readable string of a list of subjects, with a maximum number
 	 * of characters

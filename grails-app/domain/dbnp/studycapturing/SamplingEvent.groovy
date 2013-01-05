@@ -76,9 +76,6 @@ class SamplingEvent extends TemplateEntity {
 		return new RelTime(startTime).toPrettyString();
 	}
 
-    // Prevent MappingException on injected springSecurityService
-    static transients = ['templateExtendableStringListFieldsSpringSecurityService']
-
 	/**
 	 * Checks whether this Event is part of one or more of the given EventGroups
 	 * @param groups

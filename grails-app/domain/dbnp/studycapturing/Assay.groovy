@@ -44,9 +44,6 @@ class Assay extends TemplateEntity {
     // An Assay can have many samples on which it is performed, but all samples should be within the 'parent' Study.
     static hasMany = [samples: Sample]
 
-    // Prevent MappingException on injected springSecurityService
-    static transients = ['templateExtendableStringListFieldsSpringSecurityService']
-
     static mapping = {
         sort "name"
 
