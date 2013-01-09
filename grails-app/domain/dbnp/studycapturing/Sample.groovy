@@ -109,11 +109,7 @@ class Sample extends TemplateEntity {
         sort "name"
 
         // Workaround for bug http://jira.codehaus.org/browse/GRAILS-6754
-        templateTextFields type: 'text'
-
-        // Allow dbxp plugins to have their own extension tables of sample
-        tablePerHierarchy false
-    }
+	}
 
     static getSamplesFor(event) {
         return Sample.findAll('from Sample s where s.parentEvent =:event', [event: event])
