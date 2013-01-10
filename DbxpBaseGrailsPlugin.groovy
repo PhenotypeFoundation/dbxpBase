@@ -1,6 +1,6 @@
 class DbxpBaseGrailsPlugin {
     // the plugin version
-    def version = "0.1.0.6"
+    def version = "0.1.0.7"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // the other plugins this plugin depends on
@@ -9,7 +9,8 @@ class DbxpBaseGrailsPlugin {
     def pluginExcludes = [
         "grails-app/views/error.gsp"
     ]
-
+	def loadAfter = ['gdt'] //['spring-security-core']
+	def loadBefore = ['spring-security-core']
     // TODO Fill in these fields
     def title = "Dbxp Base Plugin" // Headline display name of the plugin
     def author = "Your name"
