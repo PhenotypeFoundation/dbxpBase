@@ -482,7 +482,6 @@ class Study extends TemplateEntity {
 
 		// Administrators are allowed to read everything
 		if (user == null) {
-            println "alleen public"
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
@@ -493,14 +492,12 @@ class Study extends TemplateEntity {
 				}
 			}
 		} else if (user.hasAdminRights()) {
-            println "admin, alles"
             return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
 				order("title", "asc")
 			}
 		} else {
-            println "eehm"
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
