@@ -391,7 +391,7 @@ class Study extends TemplateEntity {
 	 */
 	public boolean canRead(SecUser loggedInUser) {
 		// Public studies may be read by anyone
-		if( this.publicstudy && this.published ) {
+		if( this.publicstudy ) {
 			return true;
 		}
 		
@@ -469,9 +469,7 @@ class Study extends TemplateEntity {
 			order("title", "asc")
 			or {
 				eq("owner", user)
-				writers {
-					eq("id", user.id)
-				}
+                //'in'('writers',user)
 			}
 		}
 	}
@@ -484,6 +482,7 @@ class Study extends TemplateEntity {
 
 		// Administrators are allowed to read everything
 		if (user == null) {
+            println "alleen public"
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
@@ -494,31 +493,28 @@ class Study extends TemplateEntity {
 				}
 			}
 		} else if (user.hasAdminRights()) {
-			return c.listDistinct {
+            println "admin, alles"
+            return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
 				order("title", "asc")
 			}
 		} else {
+            println "eehm"
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
 				order("title", "asc")
-				or {
+				// TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
+                or {
 					eq("owner", user)
 					writers {
 						eq("id", user.id)
 					}
-					and {
-						readers {
-							eq("id", user.id)
-						}
-//						eq("published", true)
-					}
-                    and {
-//                        eq("published", true)
-                        eq("publicstudy", true)
+                    readers {
+                        eq("id", user.id)
                     }
+                    eq("publicstudy", true)
                 }
 			}
 		}
@@ -559,6 +555,7 @@ class Study extends TemplateEntity {
 					ilike("description", "%${query}%")
 				}
 				and {
+                    // TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
 					or {
 						eq("owner", user)
 						writers {
@@ -629,6 +626,7 @@ class Study extends TemplateEntity {
 			return Study.count()
 		} else {
 			return (c.listDistinct {
+                // TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
 				or {
 					eq("owner", user)
 					writers {
@@ -658,6 +656,7 @@ class Study extends TemplateEntity {
 			return Study.count()
 		} else {
 			return (c.listDistinct {
+                // TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
 				or {
 					eq("owner", user)
 					writers {

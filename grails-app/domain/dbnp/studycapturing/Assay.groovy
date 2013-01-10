@@ -78,7 +78,7 @@ class Assay extends TemplateEntity {
      * @return      List of assay objects
      */
     public static def giveReadableAssays( SecUser user ) {
-        Study.giveReadableStudies.collect { it.assays }
+        Study.giveReadableStudies(user).collect { it.assays }.flatten()
     }
 
     /**
@@ -87,7 +87,7 @@ class Assay extends TemplateEntity {
      * @return      List of assay objects
      */
     public static def giveWritableAssays( SecUser user ) {
-        Study.giveWriteableStudies.collect { it.assays }
+        Study.giveWritableStudies(user).collect { it.assays }.flatten()
     }
 
     /**

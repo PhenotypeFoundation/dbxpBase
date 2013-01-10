@@ -111,6 +111,14 @@ class Sample extends TemplateEntity {
         // Workaround for bug http://jira.codehaus.org/browse/GRAILS-6754
 	}
 
+    public long getSamplingTime() {
+        parentEvent.startTime
+    }
+
+    public String getSubjectName() {
+        parentSubject.name
+    }
+
     static getSamplesFor(event) {
         return Sample.findAll('from Sample s where s.parentEvent =:event', [event: event])
     }
