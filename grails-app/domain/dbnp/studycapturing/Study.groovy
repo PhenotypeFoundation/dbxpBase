@@ -453,10 +453,9 @@ class Study extends TemplateEntity {
 		if (user == null)
 			return [];
 
-		def c = Study.createCriteria()
-
 		// Administrators are allowed to read everything
 		if (user.hasAdminRights()) {
+            def c = Study.createCriteria()
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				order("title", "asc")
@@ -464,24 +463,21 @@ class Study extends TemplateEntity {
 			}
 		}
 
-		return c.listDistinct {
-			if (max != null) maxResults(max)
-			order("title", "asc")
-			or {
-				eq("owner", user)
-                //'in'('writers',user)
-			}
-		}
+        def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.writers) order by s.title asc"
+        if (max)
+            return Study.findAll(hqlString, [user: user], [max: max, offset: offset])
+        else
+            return Study.findAll(hqlString, [user: user])
 	}
 
 	/**
 	 * Returns a list of studies that are readable by the given user
 	 */
 	public static giveReadableStudies(SecUser user, Integer max = null, int offset = 0) {
-		def c = Study.createCriteria()
 
 		// Administrators are allowed to read everything
 		if (user == null) {
+            def c = Study.createCriteria()
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
@@ -492,28 +488,18 @@ class Study extends TemplateEntity {
 				}
 			}
 		} else if (user.hasAdminRights()) {
+            def c = Study.createCriteria()
             return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
 				order("title", "asc")
 			}
 		} else {
-			return c.listDistinct {
-				if (max != null) maxResults(max)
-				firstResult(offset)
-				order("title", "asc")
-				// TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
-                or {
-					eq("owner", user)
-					writers {
-						eq("id", user.id)
-					}
-                    readers {
-                        eq("id", user.id)
-                    }
-                    eq("publicstudy", true)
-                }
-			}
+            def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers) order by s.title asc"
+            if (max)
+                return Study.findAll(hqlString, [user: user], [max: max, offset: offset])
+            else
+                return Study.findAll(hqlString, [user: user])
 		}
 	}
 
@@ -523,10 +509,10 @@ class Study extends TemplateEntity {
 	 * @return
 	 */
 	public static textSearchReadableStudies(SecUser user, String query) {
-		def c = Study.createCriteria()
 
 		if (user == null) {
 			// regular user
+            def c = Study.createCriteria()
 			return c.listDistinct {
 				or {
 					ilike("title", "%${query}%")
@@ -539,6 +525,7 @@ class Study extends TemplateEntity {
 			}
 		} else if (user.hasAdminRights()) {
 			// admin can search everything
+            def c = Study.createCriteria()
 			return c.listDistinct {
 				or {
 					ilike("title", "%${query}%")
@@ -546,28 +533,7 @@ class Study extends TemplateEntity {
 				}
 			}
 		} else {
-			return c.listDistinct {
-				or {
-					ilike("title", "%${query}%")
-					ilike("description", "%${query}%")
-				}
-				and {
-                    // TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
-					or {
-						eq("owner", user)
-						writers {
-							eq("id", user.id)
-						}
-						and {
-							readers {
-								eq("id", user.id)
-							}
-							eq("published", true)
-						}
-					}
-				}
-			}
-
+            return Study.findAll("from Study s where s.title like '%${query}%' or s.description like '%${query}%' and (s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)) order by s.title asc", [user: user])
 		}
 	}
 
@@ -622,21 +588,7 @@ class Study extends TemplateEntity {
 			// Administrators are allowed to read everything
 			return Study.count()
 		} else {
-			return (c.listDistinct {
-                // TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
-				or {
-					eq("owner", user)
-					writers {
-						eq("id", user.id)
-					}
-					and {
-						readers {
-							eq("id", user.id)
-						}
-						eq("published", true)
-					}
-				}
-			}).size()
+            return Study.executeQuery("select count(*) from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)", [user: user])[0]
 		}
 	}
 
@@ -652,15 +604,7 @@ class Study extends TemplateEntity {
 		} else if (user.hasAdminRights()) {
 			return Study.count()
 		} else {
-			return (c.listDistinct {
-                // TODO: although the syntax is correct according to the latest Grails documentation, and the Hibernate query looks good, this doesn't work :-(
-				or {
-					eq("owner", user)
-					writers {
-						eq("id", user.id)
-					}
-				}
-			}).size()
+            return Study.executeQuery("select count(*) from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)", [user: user])[0]
 		}
 	}
 
