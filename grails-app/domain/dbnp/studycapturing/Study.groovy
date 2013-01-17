@@ -465,7 +465,7 @@ class Study extends TemplateEntity {
 
         def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.writers) order by s.title asc"
         if (max)
-            return Study.findAll(hqlString, [user: user], [max: max, offset: offset])
+            return Study.findAll(hqlString, [user: user], [max: max])
         else
             return Study.findAll(hqlString, [user: user])
 	}
