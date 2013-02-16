@@ -33,6 +33,7 @@ grails.project.dependency.resolution = {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
         // runtime 'mysql:mysql-connector-java:5.1.18'
+        compile "org.grails:grails-webflow:$grailsVersion"
     }
 
     plugins {
@@ -47,6 +48,7 @@ grails.project.dependency.resolution = {
                 ":ajaxflow:latest.integration",
                 ":jquery:latest.integration",
                 ":webflow:2.0.0") {
+            exclude 'grails-webflow'
             export = true
         }
 

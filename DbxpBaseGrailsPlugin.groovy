@@ -1,6 +1,6 @@
 class DbxpBaseGrailsPlugin {
     // the plugin version
-    def version = "0.1.1"
+    def version = "0.1.2"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // the other plugins this plugin depends on
@@ -13,10 +13,10 @@ class DbxpBaseGrailsPlugin {
 	def loadBefore = ['spring-security-core']
     // TODO Fill in these fields
     def title = "Dbxp Base Plugin" // Headline display name of the plugin
-    def author = "Your name"
-    def authorEmail = ""
+    def author = "Kees van Bochove"
+    def authorEmail = "kees@thehyve.nl"
     def description = '''\
-Brief summary/description of the plugin.
+Base domain model plugin for Phenotype Database (GSCF).
 '''
 
     // URL to the plugin's documentation
