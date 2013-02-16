@@ -12,7 +12,7 @@ grails.project.dependency.resolution = {
     repositories {
         grailsCentral()
         grailsRepo "http://grails.org/plugins"
-        mavenRepo "http://nexus.nmcdsp.org/content/repositories/releases"
+        mavenRepo "http://nexus.dbnp.org/content/repositories/releases"
         mavenRepo "http://ontocat.sourceforge.net/maven/repo"
 
         // uncomment the below to enable remote dependency resolution
@@ -42,7 +42,7 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        compile(":gdt:0.3.7.7",
+        compile(":gdt:0.4.1",
 		":hibernate:$grailsVersion",
                 ":ajaxflow:latest.integration",
                 ":jquery:latest.integration",
