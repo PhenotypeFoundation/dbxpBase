@@ -93,7 +93,7 @@ class Study extends TemplateEntity {
 		type: TemplateFieldType.STRING,
 		preferredIdentifier: true,
 		comment: 'Fill out the code by which many people will recognize your study',
-		required: false),
+		required: true),
 		new TemplateField(
 		name: 'startDate',
 		type: TemplateFieldType.DATE,
