@@ -432,8 +432,8 @@ class Study extends TemplateEntity {
 			return true;
 		}
 
-		return this.owner == loggedInUser || this.writers.contains(loggedInUser)
-	}
+        return this.owner.username == loggedInUser.username || this.writers.username.contains(loggedInUser.username)
+    }
 
 	/**
 	 * Returns true if the given user is the owner of this study
