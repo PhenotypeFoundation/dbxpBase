@@ -43,7 +43,8 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        compile(":gdt:0.4.2",
+        compile(
+        ":gdt:0.4.2.1",
 		":hibernate:$grailsVersion",
                 ":ajaxflow:latest.integration",
                 ":jquery:latest.integration",
@@ -54,4 +55,5 @@ grails.project.dependency.resolution = {
 
     }
 }
-//grails.plugin.location.'gdt' = '../gdt'
+
+//grails.plugin.location.'gdt' = '../GDT'
