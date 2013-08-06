@@ -20,12 +20,17 @@ class Study extends TemplateEntity {
 	Date dateCreated
 	Date lastUpdated
 	Date startDate
+	
 	List subjects
+	List subjectGroups
+	
 	List events
 	List samplingEvents
 	List eventGroups
+	
 	List samples
 	List assays
+	
 	boolean publicstudy = false  // Determines whether anonymous users are allowed to see this study. This has only effect when published = true
 
     // 20120625: published default to true
@@ -33,9 +38,14 @@ class Study extends TemplateEntity {
 
 	static hasMany = [
 		subjects: Subject,
+		subjectGroups: SubjectGroup,
+		
 		samplingEvents: SamplingEvent,
 		events: Event,
 		eventGroups: EventGroup,
+
+		subjectEventGroups: SubjectEventGroup,
+				
 		samples: Sample,
 		assays: Assay,
 		persons: StudyPerson,

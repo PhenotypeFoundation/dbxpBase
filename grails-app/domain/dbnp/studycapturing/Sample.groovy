@@ -19,10 +19,10 @@ class Sample extends TemplateEntity {
             parentSubject: Subject,
 
             // Also, it has a parent SamplingEvent describing the actual sampling, also within the same parent study.
-            parentEvent: SamplingEvent,
+            parentEvent: SamplingEventInEventGroup,
 
-            // And it has a parent EventGroup which tied it to its parent subject and parent event
-            parentEventGroup: EventGroup
+            // And it has a parent SubjectEventGroup which tied it to its parent subject and parent event
+            parentSubjectEventGroup: SubjectEventGroup
 
             // We can't have parentAssay since a Sample can belong to multiple Assays
     ]
@@ -60,8 +60,8 @@ class Sample extends TemplateEntity {
         // The same holds for parentEvent
         parentEvent(nullable: true)
 
-        // and for parentEventGroup
-        parentEventGroup(nullable: true)
+        // and for parentSubjectEventGroup
+        parentSubjectEventGroup(nullable: true)
 
         // The material domain field is optional
         material(nullable: true)

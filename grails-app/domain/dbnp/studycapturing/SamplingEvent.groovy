@@ -19,20 +19,17 @@ class SamplingEvent extends TemplateEntity {
 	// Otherwise, Grails expects the SamplingEvent to be referenced in Study.events,
 	// where it is actually referenced in Study.samplingEvents
 	static belongsTo = [parent : Study]
-	static hasMany = [samples : Sample]
+	static hasMany = [
+		samples : Sample,
+		eventGroupInstances: SamplingEventInEventGroup 
+	]
 
-	/** Start time of the event, relative to the start time of the study */
-	long startTime
-
-	/** Duration of the sampling event, if it has any (default is 0) */
-	long duration
 
 	// define what template samples should have
 	Template sampleTemplate
 
 	// define domain constraints
 	static constraints = {
-		duration(default: 0L)
 		sampleTemplate(nullable: false, blank: false)
 	}
 
