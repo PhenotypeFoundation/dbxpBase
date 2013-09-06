@@ -19,6 +19,8 @@ class Study extends TemplateEntity {
 	String description	// A brief synopsis of what the study is about
 	String code			// currently used as the external study ID, e.g. to reference a study in a SAM module
 	Date dateCreated
+
+
 	Date lastUpdated
 	Date startDate
 	List subjects
@@ -273,13 +275,7 @@ class Study extends TemplateEntity {
      * @void
      */
     def clearSAMDependencies() {
-        assays.each{ assay ->
-            SAMSample.executeUpdate("delete SAMSample s where s.parentAssay = :assay", [assay: assay])
-        }
-
-        samples.each{ sample ->
-            SAMSample.executeUpdate("delete SAMSample s where s.parentSample = :sample", [sample: sample])
-        }
+        SAMSample.where{parentSample in samples || parentAssay in assays}.list()*.delete()
     }
 
 	/**
