@@ -275,7 +275,7 @@ class Study extends TemplateEntity {
      * @void
      */
     def clearSAMDependencies() {
-        SAMSample.where{parentSample in samples || parentAssay in assays}.list()*.delete()
+        SAMSample.where{parentSample in (samples) ? samples : [] || parentAssay in (assays) ? assays : []}.list()*.delete()
     }
 
 	/**
