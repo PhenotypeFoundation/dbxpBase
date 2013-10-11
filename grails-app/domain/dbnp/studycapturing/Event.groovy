@@ -12,6 +12,8 @@ import org.dbnp.gdt.*
  * $Date$
  */
 class Event extends TemplateEntity {
+	String name
+	
 	static belongsTo = [parent : Study]
 	static hasMany = [ eventGroupInstances: EventInEventGroup ]
 
@@ -32,56 +34,17 @@ class Event extends TemplateEntity {
 	// To improve performance, the domain fields list is stored as a static final variable in the class.
 	static final List<TemplateField> domainFields = [
 		new TemplateField(
-			name: 'startTime',
-			type: TemplateFieldType.RELTIME,
-			comment: "Please enter the start time as a relative time from study start date. "+RelTime.getHelpText(),
+			name: 'name',
+			type: TemplateFieldType.STRING,
+			comment: "Please enter name of this event.",
 			required: true),
-		new TemplateField(
-			name: 'endTime',
-			type: TemplateFieldType.RELTIME,
-			comment: "Please enter the end time as a relative time from study start date. "+RelTime.getHelpText(),
-			required: true)
 	]
 
 	static mapping = {
-		sort "startTime"
+		sort "name"
 
 		// Workaround for bug http://jira.codehaus.org/browse/GRAILS-6754
 		templateTextFields type: 'text'
-	}
-
-	/**
-	 * Get the duration of the event as RelTime
-	 * @return RelTime
-	 */
-	def getDuration() {
-		return new RelTime(startTime, endTime)
-	}
-
-	 /**
-	  * Return the start time of the event, which should be relative to the start of the study
-	  * @return String a human readable representation of the start time of the event
-	 */
-	def getStartTimeString() {
-		return new RelTime(startTime).toPrettyString();
-	}
-
-	/**
-	 * Get extended, human readable string representing the duration between startTime and endTime 
-     *
-	 * @return String
-	 */
-	def getDurationString() {
-		return new RelTime(startTime, endTime).toPrettyString();
-	}
-
-	/**
-	 * Get human readable string representing the duration between startTime and endTime, rounded to one unit (weeks/days/hours etc.) 
-     *
-	 * @return String
-	 */
-	def getRoundedDuration() {
-		return new RelTime(startTime, endTime).toPrettyRoundedString();
 	}
 
 	/**
@@ -102,8 +65,6 @@ class Event extends TemplateEntity {
 	}
 
 	def String toString() {
-		return fieldExists('Description') ?
-               getFieldValue('Description') :
-                "start: " + getStartTimeString() + ", duration: " + getRoundedDuration()
+		return name
 	}
 }

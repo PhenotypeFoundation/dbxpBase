@@ -26,6 +26,7 @@ class SamplingEvent extends TemplateEntity {
 
 
 	// define what template samples should have
+	String name
 	Template sampleTemplate
 
 	// define domain constraints
