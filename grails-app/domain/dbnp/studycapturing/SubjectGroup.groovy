@@ -1,6 +1,8 @@
 package dbnp.studycapturing
 
-class SubjectGroup {
+import java.io.Serializable;
+
+class SubjectGroup implements Serializable{
 	String name
 	
 	static hasMany = [ subjects: Subject ]

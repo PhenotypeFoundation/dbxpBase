@@ -1,6 +1,9 @@
 package dbnp.studycapturing
 
-class SubjectEventGroup {
+import java.io.Serializable;
+
+
+class SubjectEventGroup implements Serializable {
 	SubjectGroup subjectGroup
 	EventGroup eventGroup
 	

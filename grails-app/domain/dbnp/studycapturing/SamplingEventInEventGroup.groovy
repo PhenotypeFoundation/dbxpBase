@@ -1,6 +1,8 @@
 package dbnp.studycapturing
 
-class SamplingEventInEventGroup {
+import java.io.Serializable;
+
+class SamplingEventInEventGroup implements Serializable{
 	SamplingEvent 	event
     EventGroup 		eventGroup
 	

@@ -1,6 +1,6 @@
 package dbnp.studycapturing
 
-class EventInEventGroup {
+class EventInEventGroup implements Serializable {
 	Event 		event
     EventGroup 	eventGroup
 	
