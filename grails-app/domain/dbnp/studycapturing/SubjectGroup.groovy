@@ -5,7 +5,7 @@ import java.io.Serializable;
 class SubjectGroup implements Serializable{
 	String name
 	
-	static hasMany = [ subjects: Subject ]
+	static hasMany = [ subjects: Subject, subjectEventGroups: SubjectEventGroup ]
 	static belongsTo = [ parent: Study ]
 	
     static constraints = {

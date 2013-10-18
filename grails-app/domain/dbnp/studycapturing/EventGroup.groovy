@@ -15,7 +15,8 @@ class EventGroup extends Identity {
 	static belongsTo = [parent : Study]
 	static hasMany = [
 		eventInstances: EventInEventGroup,
-		samplingEventInstances: SamplingEventInEventGroup
+		samplingEventInstances: SamplingEventInEventGroup,
+		subjectEventGroups: SubjectEventGroup
 	]
 
 	static constraints = {
