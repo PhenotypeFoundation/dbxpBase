@@ -13,7 +13,8 @@ import org.dbnp.gdt.*
 class Subject extends TemplateEntity {
 	// A Subject always belongs to one Study
 	static belongsTo = [Study, SubjectGroup]
-
+	static hasMany = [subjectGroups: SubjectGroup]
+	
 	/** The study this subject belongs to */
 	Study parent
 	

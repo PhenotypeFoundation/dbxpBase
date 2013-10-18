@@ -234,23 +234,25 @@ class Study extends TemplateEntity {
 	 * @void
 	 */
 	void deleteSubject(Subject subject) {
-		// Delete the subject from the event groups it was referenced in
-		this.eventGroups.each {
-			if (it.subjects?.contains(subject)) {
-				it.removeFromSubjects(subject)
+		if( subject ) {
+			// Delete the subject from the event groups it was referenced in
+			this.subjectGroups.each {
+				if (it.subjects?.contains(subject)) {
+					it.removeFromSubjects(subject)
+				}
 			}
+	
+			// Delete the samples that have this subject as parent
+			this.samples.findAll { it.parentSubject.equals(subject) }.each {
+				this.deleteSample(it)
+			}
+	
+			// This should remove the subject itself too, because of the cascading belongsTo relation
+			this.removeFromSubjects(subject)
+	
+			// But apparently it needs an explicit delete() too
+			subject.delete()
 		}
-
-		// Delete the samples that have this subject as parent
-		this.samples.findAll { it.parentSubject.equals(subject) }.each {
-			this.deleteSample(it)
-		}
-
-		// This should remove the subject itself too, because of the cascading belongsTo relation
-		this.removeFromSubjects(subject)
-
-		// But apparently it needs an explicit delete() too
-		subject.delete()
 	}
 
 	/**
@@ -259,7 +261,7 @@ class Study extends TemplateEntity {
 	 * @void
 	 */
 	def deleteAssay(Assay assay) {
-		if (assay && assay instanceof Assay) {
+		if (assay) {
 			// iterate through linked samples
 			assay.samples.findAll { true }.each() { sample ->
 				assay.removeFromSamples(sample)
@@ -279,9 +281,15 @@ class Study extends TemplateEntity {
 	 * @void
 	 */
 	void deleteEvent(Event event) {
+		if( !event )
+			return
+			
 		// remove event from eventGroups
-		this.eventGroups.each() { eventGroup ->
-			eventGroup.removeFromEvents(event)
+		( [] + event.eventGroupInstances ).each { eventGroupInstance ->
+			eventGroupInstance.eventGroup.removeFromEventInstances( eventGroupInstance );
+			eventGroupInstance.event.removeFromEventGroupInstances( eventGroupInstance );
+			
+			eventGroupInstance.delete();
 		}
 
 		// remove event from the study
@@ -291,6 +299,40 @@ class Study extends TemplateEntity {
 		event.delete()
 	}
 
+	
+	/**
+	 * Delete a samplingEvent from the study, including all its relations
+	 * @param SamplingEvent
+	 * @void
+	 */
+	void deleteSamplingEvent(SamplingEvent samplingEvent) {
+		if( !samplingEvent )
+			return
+
+		// Delete the samples that have this sampling event as parent
+		this.samples.findAll { it.parentEvent.event.equals(samplingEvent) }.each {
+			// This should remove the sample itself too, because of the cascading belongsTo relation
+			this.deleteSample(it)
+		}
+		
+		// remove event from eventGroups
+		( [] + samplingEvent.eventGroupInstances ).each { eventGroupInstance ->
+			eventGroupInstance.eventGroup.removeFromSamplingEventInstances( eventGroupInstance );
+			eventGroupInstance.event.removeFromEventGroupInstances( eventGroupInstance );
+			
+			eventGroupInstance.delete();
+		}
+		
+		// Remove event from the study
+		// This should remove the event group itself too, because of the cascading belongsTo relation
+		this.removeFromSamplingEvents(samplingEvent)
+
+		// But apparently it needs an explicit delete() too
+		// (Which can be verified by outcommenting this line, then SampleTests.testDeleteViaParentSamplingEvent fails
+		samplingEvent.delete()
+	}
+
+	
 	/**
 	 * Delete a sample from the study, including all its relations
 	 * @param Event
@@ -301,9 +343,12 @@ class Study extends TemplateEntity {
 		this.removeFromSamples(sample)
 
 		// remove the sample from any sampling events it belongs to
-		this.samplingEvents.findAll { it.samples.any { it == sample }}.each {
-			it.removeFromSamples(sample)
-		}
+		def parentEvent = sample.parentEvent;
+		parentEvent?.removeFromSamples( sample );
+
+		// remove the sample from any subjectEventGroup it belongs to
+		def parentSubjectEventGroup = sample.parentSubjectEventGroup;
+		parentSubjectEventGroup?.removeFromSamples( sample );
 
 		// remove the sample from any assays it belongs to
 		this.assays.findAll { it.samples.any { it == sample }}.each {
@@ -316,84 +361,51 @@ class Study extends TemplateEntity {
 	}
 
 	/**
-	 * Delete a samplingEvent from the study, including all its relations
-	 * @param SamplingEvent
-	 * @void
+	 * Delete a subjectgroup from the study, including all its relations
+	 * @param subjectGroup
 	 */
-	void deleteSamplingEvent(SamplingEvent samplingEvent) {
-		// remove event from eventGroups
-		this.eventGroups.each() { eventGroup ->
-			eventGroup.removeFromSamplingEvents(samplingEvent)
+	void deleteSubjectGroup(SubjectGroup subjectGroup) {
+		// Delete all subjectEventGroups pointing to this subjectGroup
+		( [] + subjectGroup.subjectEventGroups ).each {
+			deleteSubjectEventGroup( it );
 		}
-
-		// Delete the samples that have this sampling event as parent
-		this.samples.findAll { it.parentEvent.equals(samplingEvent) }.each {
-			// This should remove the sample itself too, because of the cascading belongsTo relation
-			this.deleteSample(it)
-		}
-
-		// Remove event from the study
-		// This should remove the event group itself too, because of the cascading belongsTo relation
-		this.removeFromSamplingEvents(samplingEvent)
-
-		// But apparently it needs an explicit delete() too
-		// (Which can be verified by outcommenting this line, then SampleTests.testDeleteViaParentSamplingEvent fails
-		samplingEvent.delete()
+		
+		removeFromSubjectGroups( subjectGroup )
+		
+		subjectGroup.delete();
 	}
-
+	
+	void deleteSubjectEventGroup( SubjectEventGroup subjectEventGroup ) {
+		if( !subjectEventGroup )
+			return
+		
+		// Remove all samples belonging to this subjectEventGroup
+		( [] + subjectEventGroup.samples ).each {
+			deleteSample( it );
+		}
+		
+		removeFromSubjectEventGroups( subjectEventGroup );
+		
+		subjectEventGroup.delete();
+	}
+	
 	/**
 	 * Delete an eventGroup from the study, including all its relations
 	 * @param EventGroup
 	 * @void
 	 */
 	void deleteEventGroup(EventGroup eventGroup) {
-		// If the event group contains sampling events
-		if (eventGroup.samplingEvents) {
-			// remove all samples that originate from this eventGroup
-			if (eventGroup.samplingEvents.size()) {
-				// find all samples that
-				//	- are part of this study
-				this.samples.findAll { sample ->
-					(
-						// - belong to this eventGroup
-						(
-							sample.parentEventGroup &&
-							(
-								(sample.parentEventGroup.id && eventGroup.id && sample.parentEventGroup.id == eventGroup.id)
-								||
-								(sample.parentEventGroup.getIdentifier() == eventGroup.getIdentifier())
-								||
-								sample.parentEventGroup.equals(eventGroup)
-							)
-						)
-					)
-				}
-				.each() { sample ->
-					// remove sample from study
-					this.deleteSample(sample)
-				}
-			}
-
-			// remove all samplingEvents from this eventGroup
-			eventGroup.samplingEvents.findAll {}.each() {
-				eventGroup.removeFromSamplingEvents(it)
-			}
+		if( !eventGroup ) 
+			return
+			
+		// Delete all subjectEventGroups pointing to this subjectGroup
+		( [] + eventGroup.subjectEventGroups ).each {
+			deleteSubjectEventGroup( it );
 		}
-
-		// If the event group contains subjects
-		if (eventGroup.subjects) {
-			// remove all subject from this eventGroup
-			eventGroup.subjects.findAll {}.each() {
-				eventGroup.removeFromSubjects(it)
-			}
-		}
-
-		// remove the eventGroup from the study
-		this.removeFromEventGroups(eventGroup)
-
-		// Also here, contrary to documentation, an extra delete() is needed
-		// otherwise cascaded deletes are not properly performed
-		eventGroup.delete()
+		
+		removeFromEventGroups( eventGroup );
+		
+		eventGroup.delete();
 	}
 
 	/**
@@ -690,17 +702,17 @@ class Study extends TemplateEntity {
 	// Send messages to modules about changes in this study
 	def beforeInsert = {
         manualFlush{
-            moduleNotificationService.invalidateStudy( this )
+            moduleNotificationService?.invalidateStudy( this )
         }
 	}
 	def beforeUpdate = {
         manualFlush{
-            moduleNotificationService.invalidateStudy( this )
+            moduleNotificationService?.invalidateStudy( this )
         }
 	}
 	def beforeDelete = {
 		manualFlush{
-            moduleNotificationService.invalidateStudy( this )
+            moduleNotificationService?.invalidateStudy( this )
         }
 	}
 

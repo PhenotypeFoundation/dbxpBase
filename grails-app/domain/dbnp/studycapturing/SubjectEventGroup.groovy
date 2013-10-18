@@ -4,9 +4,6 @@ import java.io.Serializable;
 
 
 class SubjectEventGroup implements Serializable {
-	SubjectGroup subjectGroup
-	EventGroup eventGroup
-	
 	/** 
 	 * Start time of the eventgroup for this group of subjects, 
 	 * relative to the start time of the study as the number of seconds
@@ -53,8 +50,8 @@ class SubjectEventGroup implements Serializable {
 		calendar.time
 	}
 	
-	static belongsTo = [ parent: Study ]
-	static hasMany 
+	static belongsTo = [ parent: Study, subjectGroup: SubjectGroup, eventGroup: EventGroup ]
+	static hasMany = [ samples: Sample ]
 	static constraints = {
 		description nullable: true
     }
