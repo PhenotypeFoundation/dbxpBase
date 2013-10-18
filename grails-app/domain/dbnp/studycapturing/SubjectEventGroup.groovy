@@ -54,7 +54,7 @@ class SubjectEventGroup implements Serializable {
 	}
 	
 	static belongsTo = [ parent: Study ]
-	static hasMany 
+	static hasMany = [ samples: Sample ]
 	static constraints = {
 		description nullable: true
     }
