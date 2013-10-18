@@ -21,7 +21,7 @@ class Event extends TemplateEntity {
 	 * Constraints
 	 */
 	static constraints = {
-
+		name nullable: true
 	}
 
 	/**

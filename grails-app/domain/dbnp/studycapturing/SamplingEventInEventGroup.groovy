@@ -15,6 +15,7 @@ class SamplingEventInEventGroup implements Serializable{
 	long duration
 	
 	static belongsTo = [ SamplingEvent, EventGroup ]
+	static hasMany = [ samples : Sample ]
 	
 	static constraints = {
 		duration(default: 0L)

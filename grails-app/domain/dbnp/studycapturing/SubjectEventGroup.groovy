@@ -14,6 +14,18 @@ class SubjectEventGroup implements Serializable {
 	long startTime
 	
 	/**
+	 * Description of this subjectEventGroup
+	 */
+	String description
+	
+	/**
+	 * Sets the startTime from an absolute date (number of seconds since 1970)
+	 */
+	public void setAbsoluteStartTime( Number seconds ) {
+		startTime = seconds - eventGroup.parent.startDate.time / 1000
+	}
+	
+	/**
 	 * Returns the absolute start date for this event group
 	 * @return
 	 */
@@ -42,7 +54,8 @@ class SubjectEventGroup implements Serializable {
 	}
 	
 	static belongsTo = [ parent: Study ]
-	
+	static hasMany 
 	static constraints = {
+		description nullable: true
     }
 }

@@ -20,7 +20,6 @@ class SamplingEvent extends TemplateEntity {
 	// where it is actually referenced in Study.samplingEvents
 	static belongsTo = [parent : Study]
 	static hasMany = [
-		samples : Sample,
 		eventGroupInstances: SamplingEventInEventGroup 
 	]
 
@@ -31,6 +30,7 @@ class SamplingEvent extends TemplateEntity {
 
 	// define domain constraints
 	static constraints = {
+		name nullable: true
 		sampleTemplate(nullable: false, blank: false)
 	}
 
@@ -44,14 +44,9 @@ class SamplingEvent extends TemplateEntity {
 	// To improve performance, the domain fields list is stored as a static final variable in the class.
 	static final List<TemplateField> domainFields = [
 		new TemplateField(
-			name: 'startTime',
-			type: TemplateFieldType.RELTIME,
-			comment: "Please enter the start time as a relative time from study start date."+RelTime.getHelpText(),
-			required: true),
-		new TemplateField(
-			name: 'duration',
-			type: TemplateFieldType.RELTIME,
-			comment: "Please enter the duration of the sampling action, if applicable. "+RelTime.getHelpText(),
+			name: 'name',
+			type: TemplateFieldType.STRING,
+			comment: "Please enter the name of the sampling event.",
 			required: true),
 		new TemplateField(
 			name: 'sampleTemplate',
