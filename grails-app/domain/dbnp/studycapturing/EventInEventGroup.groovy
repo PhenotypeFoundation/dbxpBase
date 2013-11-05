@@ -15,6 +15,13 @@ class EventInEventGroup implements Serializable {
 	long duration
 
 	
+	/**
+	 * Sets the startTime from an absolute date (number of seconds since 1970)
+	 */
+	public void setAbsoluteStartTime( Number seconds ) {
+		startTime = seconds - eventGroup.parent.startDate.time / 1000
+	}
+	
 	static belongsTo = [ Event, EventGroup ]
 	
 	static constraints = {

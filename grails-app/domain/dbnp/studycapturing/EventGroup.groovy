@@ -31,14 +31,18 @@ class EventGroup extends Identity {
 	 */
 	def getDuration() {
 		// Determine the maximum startTime + duration 
-		def duration = 0
+		def lastEndTime = 0
+		def start = 0
 		(eventInstances + samplingEventInstances).findAll().each {
+			if( it.startTime < start && it.startTime >= 0 )
+				start = it.startTime
+				
 			def endTime = it.startTime + it.duration 
-			if( endTime > duration )
-				duration = endTime; 
+			if( endTime > lastEndTime )
+				lastEndTime = endTime; 
 		}
 		
-		return new RelTime(duration)
+		return new RelTime(lastEndTime - start)
 	}
 	
 	def getContents() {
