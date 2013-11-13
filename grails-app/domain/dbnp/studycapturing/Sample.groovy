@@ -119,6 +119,16 @@ class Sample extends TemplateEntity {
         parentSubject.name
     }
 
+    public EventGroup getEventGroup() {
+        if( parentEvent ) {
+            return sample.parentEvent.eventGroup
+        } else if( sample.SubjectEventGroup ) {
+            return sample.parentSubjectEventGroup.eventGroup
+        } else {
+            return null
+        }
+    }
+
     static getSamplesFor(event) {
         return Sample.findAll('from Sample s where s.parentEvent =:event', [event: event])
     }
