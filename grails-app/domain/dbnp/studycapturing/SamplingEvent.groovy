@@ -61,14 +61,6 @@ class SamplingEvent extends TemplateEntity {
             templateTextFields type: 'text'
         }
 
-	 /**
-	  * Return the start time of the event, which should be relative to the start of the study
-	  * @return String a human readable representation of the start time of the event
-	 */
-	def getStartTimeString() {
-		return new RelTime(startTime).toPrettyString();
-	}
-
     /**
      * Checks whether this Event is part of one or more of the given EventGroups
      * @param groups
