@@ -69,27 +69,25 @@ class SamplingEvent extends TemplateEntity {
 		return new RelTime(startTime).toPrettyString();
 	}
 
-	/**
-	 * Checks whether this Event is part of one or more of the given EventGroups
-	 * @param groups
-	 * @return
-	 */
-	def belongsToGroup(Collection<EventGroup> groups) {
-		def eventFound = false;
-		def that = this;
-		groups.each { eventgroup ->
-			if (!eventFound && eventgroup.samplingEvents) {
-				eventFound = (that.id in eventgroup.samplingEvents.id);
-			}
-		}
+    /**
+     * Checks whether this Event is part of one or more of the given EventGroups
+     * @param groups
+     * @return
+     */
+    def belongsToGroup(Collection<EventGroup> groups) {
+        def eventFound = false;
+        def that = this;
+        groups.each { eventgroup ->
+            if (!eventFound && eventgroup.samplingEvents) {
+                eventFound = (that.id in eventgroup.samplingEvents.id);
+            }
+        }
 
-		return eventFound;
-	}
+        return eventFound;
+    }
 
-	def String toString() {
-        return fieldExists('Description') ?
-            getFieldValue('Description') :
-            "start: " + getStartTimeString()
-	}
-	
+    def String toString() {
+        return name
+    }
+
 }
