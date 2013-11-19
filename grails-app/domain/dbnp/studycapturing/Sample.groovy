@@ -194,10 +194,10 @@ class Sample extends TemplateEntity {
     }
 
     public static String generateSampleName(flow, subject, eventGroup, samplingEvent) {
-        def samplingEventName = ucwords(samplingEvent.template.name)
-        def eventGroupName = ucwords(eventGroup.name).replaceAll("([ ]{1,})", "")
-        def sampleTemplateName = (samplingEvent.sampleTemplate) ? ucwords(samplingEvent.sampleTemplate.name) : ''
-        def sampleName = (ucwords(subject.name) + '_' + samplingEventName + '_' + eventGroupName + '_' + new RelTime(samplingEvent.startTime).toString() + '_' + sampleTemplateName).replaceAll("([ ]{1,})", "")
+        def samplingEventName = samplingEvent.template.name
+        def eventGroupName = eventGroup.name
+        def sampleTemplateName = (samplingEvent.sampleTemplate) ? samplingEvent.sampleTemplate.name : ''
+        def sampleName = (subject.name + '--' + samplingEventName + '--' + eventGroupName + '--' + new RelTime(samplingEvent.startTime).toString() + '--' + sampleTemplateName).replaceAll("([ ]{1,})", "_")
         def tempSampleIterator = 0
         def tempSampleName = sampleName
 

@@ -1,6 +1,7 @@
 package dbnp.studycapturing
 import org.dbnp.gdt.*
 import dbnp.authentication.SecUser
+import org.dbxp.sam.*
 
 /**
  * Domain class describing the basic entity in the study capture part: the Study class.
@@ -18,6 +19,8 @@ class Study extends TemplateEntity {
 	String description	// A brief synopsis of what the study is about
 	String code			// currently used as the external study ID, e.g. to reference a study in a SAM module
 	Date dateCreated
+
+
 	Date lastUpdated
 	Date startDate
 	List subjects
@@ -250,6 +253,10 @@ class Study extends TemplateEntity {
 	 */
 	def deleteAssay(Assay assay) {
 		if (assay && assay instanceof Assay) {
+
+            // Delete SAMSample association
+            SAMSample.executeUpdate("delete SAMSample s where s.parentAssay = :assay", [assay: assay])
+
 			// iterate through linked samples
 			assay.samples.findAll { true }.each() { sample ->
 				assay.removeFromSamples(sample)
@@ -262,6 +269,14 @@ class Study extends TemplateEntity {
 			assay.delete()
 		}
 	}
+
+    /**
+     * Dependencies from SAM have to be dealed with manually, so run this function before deleting a study.
+     * @void
+     */
+    def clearSAMDependencies() {
+        SAMSample.where{parentSample in (samples) ? samples : [] || parentAssay in (assays) ? assays : []}.list()*.delete()
+    }
 
 	/**
 	 * Delete an event from the study, including all its relations
@@ -289,6 +304,9 @@ class Study extends TemplateEntity {
 	void deleteSample(Sample sample) {
 		// remove the sample from the study
 		this.removeFromSamples(sample)
+
+        // Delete SAMSample association
+        SAMSample.executeUpdate("delete SAMSample s where s.parentSample = :sample", [sample: sample])
 
 		// remove the sample from any sampling events it belongs to
 		this.samplingEvents.findAll { it.samples.any { it == sample }}.each {
