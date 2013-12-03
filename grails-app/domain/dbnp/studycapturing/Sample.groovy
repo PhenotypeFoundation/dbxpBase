@@ -79,21 +79,17 @@ class Sample extends TemplateEntity {
             def error = false
 
             // check whether obj.parent.samples is not null at this stage to avoid null pointer exception
-            if (obj.parent) {
-
-                if (obj.parent.samples) {
-
-                    // check if there is exactly one sample with this name in the study (this one)
-                    if (obj.parent.samples.findAll { it.name == obj.name}.size() > 1) {
-                        error = true
-                        errors.rejectValue(
-                                'name',
-                                'sample.UniqueNameViolation',
-                                [obj.name, obj.parent] as Object[],
-                                'Sample name {0} appears multiple times in study {1}'
-                        )
+            if (obj.parent && obj.parent.samples ) {
+                // check if there is exactly one sample with this name in the study (this one)
+                if (obj.parent.samples.findAll { it.name == obj.name }.size() > 1) {
+                    error = true
+                    errors.rejectValue(
+                            'name',
+                            'sample.UniqueNameViolation',
+                            [obj.name, obj.parent] as Object[],
+                            'Sample name {0} appears multiple times in study {1}'
+                    )
                     }
-                }
             }
             else {
                 // if there is no parent study defined, fail immediately
@@ -193,23 +189,18 @@ class Sample extends TemplateEntity {
         return showSamples
     }
 
-    public static String generateSampleName(flow, subject, eventGroup, samplingEvent) {
-        def samplingEventName = ucwords(samplingEvent.template.name)
-        def eventGroupName = ucwords(eventGroup.name).replaceAll("([ ]{1,})", "")
-        def sampleTemplateName = (samplingEvent.sampleTemplate) ? ucwords(samplingEvent.sampleTemplate.name) : ''
-        def sampleName = (ucwords(subject.name) + '_' + samplingEventName + '_' + eventGroupName + '_' + new RelTime(samplingEvent.startTime).toString() + '_' + sampleTemplateName).replaceAll("([ ]{1,})", "")
-        def tempSampleIterator = 0
-        def tempSampleName = sampleName
-
-        // make sure sampleName is unique
-        if (flow.study.samples) {
-            while (flow.study.samples.find { it.name == tempSampleName }) {
-                tempSampleIterator++
-                tempSampleName = sampleName + "_" + tempSampleIterator
-            }
-            sampleName = tempSampleName
-        }
-        return sampleName
+    public String generateName() {
+		if( parentSubject && parentEvent ) {
+			def subjectName = ucwords( parentSubject.name )
+			def eventGroupName = ucwords( parentSubjectEventGroup?.eventGroup?.name).replaceAll("([ ]{1,})", "")
+			def sampleTemplateName = ucwords(parentEvent?.event.template?.name)
+			
+			def subjectEventGroupStartTime = parentSubjectEventGroup ? new RelTime( parentSubjectEventGroup.startTime ).toString() : '0'
+			def samplingEventInstanceStartTime = parentEvent ? new RelTime( parentEvent.startTime ).toString() : '0'
+			
+			this.name = subjectName + " " + eventGroupName + " " + sampleTemplateName + " " + subjectEventGroupStartTime + " " + samplingEventInstanceStartTime
+		}
+		return this.name
     }
 
     /**
@@ -223,6 +214,9 @@ class Sample extends TemplateEntity {
     public static ucwords(String text) {
         def newText = ''
 
+		if( !text )
+			return ""
+		
         // change case to lowercase
         text = text.toLowerCase()
 
