@@ -1,5 +1,7 @@
 package dbnp.studycapturing
 
+import org.dbnp.gdt.RelTime
+
 import java.io.Serializable;
 
 class SamplingEventInEventGroup implements Serializable{
@@ -27,5 +29,13 @@ class SamplingEventInEventGroup implements Serializable{
 	
 	static constraints = {
 		duration(default: 0L)
+    }
+
+    /**
+     * Return the start time of the event, which should be relative to the start of the study
+     * @return String a human readable representation of the start time of the event
+     */
+    def getStartTimeString() {
+        return new RelTime(startTime).toPrettyString();
     }
 }
