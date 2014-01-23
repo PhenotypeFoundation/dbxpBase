@@ -22,11 +22,12 @@ class Sample extends TemplateEntity {
             parentEvent: SamplingEventInEventGroup,
 
             // And it has a parent SubjectEventGroup which tied it to its parent subject and parent event
-            parentSubjectEventGroup: SubjectEventGroup
+            parentSubjectEventGroup: SubjectEventGroup,
 
             // We can't have parentAssay since a Sample can belong to multiple Assays
-    ]
 
+    ]
+	
     String name             // should be unique with respect to the parent study (which can be inferred)
     Term material            // material of the sample (should normally be bound to the BRENDA ontology)
 
@@ -200,15 +201,17 @@ class Sample extends TemplateEntity {
     }
 
     public String generateName() {
-		if( parentSubject && parentEvent ) {
+		if( parentSubject && parentEvent && parentSubjectEventGroup) {
 			def subjectName = ucwords( parentSubject.name )
 			def eventGroupName = ucwords( parentSubjectEventGroup?.eventGroup?.name).replaceAll("([ ]{1,})", "")
 			def sampleTemplateName = ucwords(parentEvent?.event.template?.name)
 			
-			def subjectEventGroupStartTime = parentSubjectEventGroup ? new RelTime( parentSubjectEventGroup.startTime ).toString() : '0'
-			def samplingEventInstanceStartTime = parentEvent ? new RelTime( parentEvent.startTime ).toString() : '0'
+			def subjectEventGroupStartTime = parentSubjectEventGroup ? parentSubjectEventGroup.startTime : '0'
+			def samplingEventInstanceStartTime = parentEvent ? parentEvent.startTime : '0'
 			
-			this.name = subjectName + " " + eventGroupName + " " + sampleTemplateName + " " + subjectEventGroupStartTime + " " + samplingEventInstanceStartTime
+			def startTime = new RelTime( subjectEventGroupStartTime + samplingEventInstanceStartTime ).toString()
+			
+			this.name = ( subjectName + "_" + eventGroupName + "_" + sampleTemplateName + "_" + startTime ).replaceAll( " ", "_" )
 		}
 		return this.name
     }

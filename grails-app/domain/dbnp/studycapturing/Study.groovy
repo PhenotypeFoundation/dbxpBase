@@ -236,9 +236,10 @@ class Study extends TemplateEntity {
 	void deleteSubject(Subject subject) {
 		if( subject ) {
 			// Delete the subject from the event groups it was referenced in
-			this.subjectGroups.each {
-				if (it.subjects?.contains(subject)) {
-					it.removeFromSubjects(subject)
+			if( subject.subjectGroups ) {
+				( [] + subject.subjectGroups ).each { subjectGroup ->
+					subjectGroup.removeFromSubjects(subject)
+					subjectGroup.save( flush: true )
 				}
 			}
 	
@@ -251,7 +252,7 @@ class Study extends TemplateEntity {
 			this.removeFromSubjects(subject)
 	
 			// But apparently it needs an explicit delete() too
-			subject.delete()
+			subject.delete( flush: true )
 		}
 	}
 
@@ -357,7 +358,7 @@ class Study extends TemplateEntity {
 
 		// Also here, contrary to documentation, an extra delete() is needed
 		// otherwise date is not properly deleted!
-		sample.delete()
+		sample.delete( flush: true )
 	}
 
 	/**
