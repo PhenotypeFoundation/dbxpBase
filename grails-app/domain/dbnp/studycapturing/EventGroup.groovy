@@ -45,8 +45,37 @@ class EventGroup extends Identity {
 		return new RelTime(lastEndTime - start)
 	}
 	
-	def getContents() {
-		return ""
+	/**
+	 * Returns a human readable list of the contents of this event group
+	 * @param maxEvents		Number of events/samplingEvents to return at most. Defaults to 3
+	 * @return
+	 */
+	def getContents( def maxEvents = 3 ) {
+		// Determine contents
+		def contents = [:]
+		
+		// Find a list of unique events and counts
+		def allInstances = ( eventInstances + samplingEventInstances ).findAll() 
+		allInstances?.each { instance ->
+			if( instance.event ) {
+				if( contents.containsKey( instance.event.name ) ) {
+					contents[ instance.event.name ]++
+				} else {
+					contents[ instance.event.name ] = 1
+				}
+			} 
+		}
+		
+		if( !contents ) 
+			return ""
+		
+		// Sort the map by count, take the most occurring events from the list
+		def contentDescription = ""
+		def items = contents.sort { a, b ->
+			a.value == b.value ? a.key <=> b.key : b.value <=> a.value 
+		}.take( Math.min( contents.size(), maxEvents ) ).collect { it.value + "x " + it.key } 
+		
+		items.join( ", " ) + ( contents.size() > items.size() ? "..." : "" )
 	}
 
 }
