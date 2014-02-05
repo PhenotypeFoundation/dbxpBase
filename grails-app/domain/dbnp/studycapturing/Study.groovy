@@ -78,7 +78,6 @@ class Study extends TemplateEntity {
 		description type: 'text'
 		// Workaround for bug http://jira.codehaus.org/browse/GRAILS-6754
 		templateTextFields type: 'text'
-
 	}
 
 	/**
@@ -384,11 +383,25 @@ class Study extends TemplateEntity {
 		( [] + subjectEventGroup.samples ).each {
 			deleteSample( it );
 		}
-		
+
+        subjectEventGroup.subjectGroup.removeFromSubjectEventGroups(subjectEventGroup)
 		removeFromSubjectEventGroups( subjectEventGroup );
 		
-		subjectEventGroup.delete();
+		subjectEventGroup.delete(failOnError: true);
 	}
+
+    void deleteSamplingEventInEventGroup( SamplingEventInEventGroup samplingEventInEventGroup ) {
+        if( !samplingEventInEventGroup )
+            return
+
+        // Remove all samples belonging to this subjectEventGroup
+        ( [] + samplingEventInEventGroup.samples ).each {
+            deleteSample( it );
+        }
+        samplingEventInEventGroup.event.removeFromEventGroupInstances(samplingEventInEventGroup)
+
+        samplingEventInEventGroup.delete(failOnError: true);
+    }
 	
 	/**
 	 * Delete an eventGroup from the study, including all its relations
@@ -400,10 +413,20 @@ class Study extends TemplateEntity {
 			return
 			
 		// Delete all subjectEventGroups pointing to this subjectGroup
+
 		( [] + eventGroup.subjectEventGroups ).each {
 			deleteSubjectEventGroup( it );
 		}
-		
+
+        ([] + eventGroup.samplingEventInstances).each {
+            deleteSamplingEventInEventGroup(it);
+        }
+
+        ([] + eventGroup.eventInstances).each {
+            it.event.removeFromEventGroupInstances it
+            it.delete()
+        }
+
 		removeFromEventGroups( eventGroup );
 		
 		eventGroup.delete();

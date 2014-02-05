@@ -1,5 +1,7 @@
 package dbnp.studycapturing
 
+import org.dbnp.gdt.RelTime
+
 import java.io.Serializable;
 
 
@@ -49,6 +51,10 @@ class SubjectEventGroup implements Serializable {
 		
 		calendar.time
 	}
+
+    def getStartTimeString() {
+        return new RelTime(startTime).toPrettyString();
+    }
 	
 	static belongsTo = [ parent: Study, subjectGroup: SubjectGroup, eventGroup: EventGroup ]
 	static hasMany = [ samples: Sample ]
