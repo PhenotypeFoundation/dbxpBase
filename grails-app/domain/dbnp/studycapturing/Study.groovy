@@ -20,32 +20,32 @@ class Study extends TemplateEntity {
 	Date dateCreated
 	Date lastUpdated
 	Date startDate
-	
+
 	List subjects
 	List subjectGroups
-	
+
 	List events
 	List samplingEvents
 	List eventGroups
-	
+
 	List samples
 	List assays
-	
+
 	boolean publicstudy = false  // Determines whether anonymous users are allowed to see this study. This has only effect when published = true
 
-    // 20120625: published default to true
-    boolean published = true // Determines whether a study is private (only accessable by the owner and writers) or published (also visible to readers)
+	// 20120625: published default to true
+	boolean published = true // Determines whether a study is private (only accessable by the owner and writers) or published (also visible to readers)
 
 	static hasMany = [
 		subjects: Subject,
 		subjectGroups: SubjectGroup,
-		
+
 		samplingEvents: SamplingEvent,
 		events: Event,
 		eventGroups: EventGroup,
 
 		subjectEventGroups: SubjectEventGroup,
-				
+
 		samples: Sample,
 		assays: Assay,
 		persons: StudyPerson,
@@ -65,7 +65,7 @@ class Study extends TemplateEntity {
 
 	// see org.dbnp.gdt.FuzzyStringMatchController and Service
 	static fuzzyStringMatchable = [
-	    "title",
+		"title",
 		"code"
 	]
 
@@ -109,11 +109,11 @@ class Study extends TemplateEntity {
 		type: TemplateFieldType.DATE,
 		comment: 'Fill out the official start date or date of first action',
 		required: true),
-//		new TemplateField(
-//		name: 'published',
-//		type: TemplateFieldType.BOOLEAN,
-//		comment: 'Determines whether this study is published (accessible for the study readers and, if the study is public, for anonymous users). A study can only be published if it meets certain quality criteria, which will be checked upon save.',
-//		required: false)
+		//		new TemplateField(
+		//		name: 'published',
+		//		type: TemplateFieldType.BOOLEAN,
+		//		comment: 'Determines whether this study is published (accessible for the study readers and, if the study is public, for anonymous users). A study can only be published if it meets certain quality criteria, which will be checked upon save.',
+		//		required: false)
 	]
 
 	/**
@@ -242,15 +242,15 @@ class Study extends TemplateEntity {
 					subjectGroup.save( flush: true )
 				}
 			}
-	
+
 			// Delete the samples that have this subject as parent
 			this.samples.findAll { it.parentSubject.equals(subject) }.each {
 				this.deleteSample(it)
 			}
-	
+
 			// This should remove the subject itself too, because of the cascading belongsTo relation
 			this.removeFromSubjects(subject)
-	
+
 			// But apparently it needs an explicit delete() too
 			subject.delete( flush: true )
 		}
@@ -284,12 +284,12 @@ class Study extends TemplateEntity {
 	void deleteEvent(Event event) {
 		if( !event )
 			return
-			
+
 		// remove event from eventGroups
 		( [] + event.eventGroupInstances ).each { eventGroupInstance ->
 			eventGroupInstance.eventGroup.removeFromEventInstances( eventGroupInstance );
 			eventGroupInstance.event.removeFromEventGroupInstances( eventGroupInstance );
-			
+
 			eventGroupInstance.delete();
 		}
 
@@ -300,7 +300,7 @@ class Study extends TemplateEntity {
 		event.delete()
 	}
 
-	
+
 	/**
 	 * Delete a samplingEvent from the study, including all its relations
 	 * @param SamplingEvent
@@ -315,15 +315,15 @@ class Study extends TemplateEntity {
 			// This should remove the sample itself too, because of the cascading belongsTo relation
 			this.deleteSample(it)
 		}
-		
+
 		// remove event from eventGroups
 		( [] + samplingEvent.eventGroupInstances ).each { eventGroupInstance ->
 			eventGroupInstance.eventGroup.removeFromSamplingEventInstances( eventGroupInstance );
 			eventGroupInstance.event.removeFromEventGroupInstances( eventGroupInstance );
-			
+
 			eventGroupInstance.delete();
 		}
-		
+
 		// Remove event from the study
 		// This should remove the event group itself too, because of the cascading belongsTo relation
 		this.removeFromSamplingEvents(samplingEvent)
@@ -333,7 +333,7 @@ class Study extends TemplateEntity {
 		samplingEvent.delete()
 	}
 
-	
+
 	/**
 	 * Delete a sample from the study, including all its relations
 	 * @param Event
@@ -366,48 +366,81 @@ class Study extends TemplateEntity {
 	 * @param subjectGroup
 	 */
 	void deleteSubjectGroup(SubjectGroup subjectGroup) {
+		log.debug( "Deleting subject group " + subjectGroup + " from " + this )
+
 		// Delete all subjectEventGroups pointing to this subjectGroup
 		( [] + subjectGroup.subjectEventGroups ).each {
 			deleteSubjectEventGroup( it );
 		}
-		
+
 		removeFromSubjectGroups( subjectGroup )
-		
+
 		subjectGroup.delete();
 	}
-	
+
 	void deleteSubjectEventGroup( SubjectEventGroup subjectEventGroup ) {
+		log.debug( "Deleting subject event group " + subjectEventGroup + " from " + this )
 		if( !subjectEventGroup )
 			return
-		
+
 		// Remove all samples belonging to this subjectEventGroup
 		( [] + subjectEventGroup.samples ).each {
 			deleteSample( it );
 		}
-		
+
+		// Remove this subject eventgroup from the subjectGroup list and the eventgroup list
+		subjectEventGroup.eventGroup?.removeFromSubjectEventGroups( subjectEventGroup )
+		subjectEventGroup.subjectGroup?.removeFromSubjectEventGroups( subjectEventGroup )
+
+		// Delete the object itself
 		removeFromSubjectEventGroups( subjectEventGroup );
-		
 		subjectEventGroup.delete();
 	}
-	
+
 	/**
 	 * Delete an eventGroup from the study, including all its relations
 	 * @param EventGroup
 	 * @void
 	 */
 	void deleteEventGroup(EventGroup eventGroup) {
-		if( !eventGroup ) 
+		log.debug( "Deleting event group " + eventGroup + " from " + this )
+		if( !eventGroup )
 			return
-			
+
 		// Delete all subjectEventGroups pointing to this subjectGroup
 		( [] + eventGroup.subjectEventGroups ).each {
 			deleteSubjectEventGroup( it );
 		}
+
+		// Delete all eventsInEventGroup and samplingEventsInEventGroup from this group
+		( [] + eventGroup.eventInstances ).each { deleteEventInEventGroup( it )	}
+		( [] + eventGroup.samplingEventInstances ).each { deleteSamplingEventInEventGroup( it )	}
 		
 		removeFromEventGroups( eventGroup );
-		
-		eventGroup.delete();
+
+		eventGroup.delete()
 	}
+
+	void deleteEventInEventGroup( EventInEventGroup instance ) {
+		log.debug( "Deleting event instance " + instance + " from " + this )
+		if( !instance )
+			return
+
+		instance.event?.removeFromEventGroupInstances( instance )
+		instance.eventGroup?.removeFromEventInstances( instance )
+		instance.delete()
+	}
+
+	void deleteSamplingEventInEventGroup( SamplingEventInEventGroup instance ) {
+		log.debug( "Deleting samplingevent instance " + instance + " from " + this )
+		if( !instance )
+			return
+
+		instance.event?.removeFromEventGroupInstances( instance )
+		instance.eventGroup?.removeFromSamplingEventInstances( instance )
+		instance.delete()
+	}
+
 
 	/**
 	 * Returns true if the given user is allowed to read this study
@@ -417,7 +450,7 @@ class Study extends TemplateEntity {
 		if( this.publicstudy ) {
 			return true;
 		}
-		
+
 		// Anonymous readers are only given access when published and public
 		if (loggedInUser == null) {
 			return false;
@@ -434,7 +467,7 @@ class Study extends TemplateEntity {
 		}
 
 		// Readers are allowed to read this study when it is published
-//		if (this.readers.contains(loggedInUser) && this.published) {
+		//		if (this.readers.contains(loggedInUser) && this.published) {
 		if (this.readers.contains(loggedInUser)) {
 			return true
 		}
@@ -455,8 +488,8 @@ class Study extends TemplateEntity {
 			return true;
 		}
 
-        return this.owner.username == loggedInUser.username || this.writers.username.contains(loggedInUser.username)
-    }
+		return this.owner.username == loggedInUser.username || this.writers.username.contains(loggedInUser.username)
+	}
 
 	/**
 	 * Returns true if the given user is the owner of this study
@@ -478,19 +511,19 @@ class Study extends TemplateEntity {
 
 		// Administrators are allowed to read everything
 		if (user.hasAdminRights()) {
-            def c = Study.createCriteria()
+			def c = Study.createCriteria()
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				order("title", "asc")
-				
+
 			}
 		}
 
-        def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.writers) order by s.title asc"
-        if (max)
-            return Study.findAll(hqlString, [user: user], [max: max])
-        else
-            return Study.findAll(hqlString, [user: user])
+		def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.writers) order by s.title asc"
+		if (max)
+			return Study.findAll(hqlString, [user: user], [max: max])
+		else
+			return Study.findAll(hqlString, [user: user])
 	}
 
 	/**
@@ -500,29 +533,29 @@ class Study extends TemplateEntity {
 
 		// Administrators are allowed to read everything
 		if (user == null) {
-            def c = Study.createCriteria()
+			def c = Study.createCriteria()
 			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
 				order("title", "asc")
 				and {
-//					eq("published", true)
+					//					eq("published", true)
 					eq("publicstudy", true)
 				}
 			}
 		} else if (user.hasAdminRights()) {
-            def c = Study.createCriteria()
-            return c.listDistinct {
+			def c = Study.createCriteria()
+			return c.listDistinct {
 				if (max != null) maxResults(max)
 				firstResult(offset)
 				order("title", "asc")
 			}
 		} else {
-            def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers) order by s.title asc"
-            if (max)
-                return Study.findAll(hqlString, [user: user], [max: max, offset: offset])
-            else
-                return Study.findAll(hqlString, [user: user])
+			def hqlString = "from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers) order by s.title asc"
+			if (max)
+				return Study.findAll(hqlString, [user: user], [max: max, offset: offset])
+			else
+				return Study.findAll(hqlString, [user: user])
 		}
 	}
 
@@ -535,7 +568,7 @@ class Study extends TemplateEntity {
 
 		if (user == null) {
 			// regular user
-            def c = Study.createCriteria()
+			def c = Study.createCriteria()
 			return c.listDistinct {
 				or {
 					ilike("title", "%${query}%")
@@ -548,7 +581,7 @@ class Study extends TemplateEntity {
 			}
 		} else if (user.hasAdminRights()) {
 			// admin can search everything
-            def c = Study.createCriteria()
+			def c = Study.createCriteria()
 			return c.listDistinct {
 				or {
 					ilike("title", "%${query}%")
@@ -556,7 +589,7 @@ class Study extends TemplateEntity {
 				}
 			}
 		} else {
-            return Study.findAll("from Study s where s.title like '%${query}%' or s.description like '%${query}%' and (s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)) order by s.title asc", [user: user])
+			return Study.findAll("from Study s where s.title like '%${query}%' or s.description like '%${query}%' and (s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)) order by s.title asc", [user: user])
 		}
 	}
 
@@ -611,7 +644,7 @@ class Study extends TemplateEntity {
 			// Administrators are allowed to read everything
 			return Study.count()
 		} else {
-            return Study.executeQuery("select count(*) from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)", [user: user])[0]
+			return Study.executeQuery("select count(*) from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)", [user: user])[0]
 		}
 	}
 
@@ -627,7 +660,7 @@ class Study extends TemplateEntity {
 		} else if (user.hasAdminRights()) {
 			return Study.count()
 		} else {
-            return Study.executeQuery("select count(*) from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)", [user: user])[0]
+			return Study.executeQuery("select count(*) from Study s where s.publicstudy = true or s.owner = :user or :user in elements(s.readers) OR :user in elements(s.writers)", [user: user])[0]
 		}
 	}
 
@@ -648,108 +681,108 @@ class Study extends TemplateEntity {
 		return this.id == s.id
 	}
 
-    /**
-     * Returns the minimum and maximum date of the events of this study
-     * @return  A map containing absolute minDate and maxDate (not relative)
-     */
-    def getMinMaxEventDate() {
-        long minDate = Long.MAX_VALUE;
-        long maxDate = Long.MIN_VALUE;
-        this.events.each {
-            if(it.startTime < minDate) {
-                minDate = it.startTime;
-            }
-            if(it.endTime > maxDate) {
-                maxDate = it.endTime;
-            }
-            if(it.startTime > maxDate) {
-                maxDate = it.startTime;
-            }
-        }
-        this.samplingEvents.each {
-            if(it.startTime < minDate) {
-                minDate = it.startTime;
-            }
-            if(it.startTime > maxDate) {
-                maxDate = it.startTime;
-            }
-        }
-        long lngStartDate  = (Long) this.startDate.getTime();
-        return ["minDate" : new Date( lngStartDate + minDate * 1000 ), "maxDate" : new Date( lngStartDate + maxDate * 1000 )];
-    }
+	/**
+	 * Returns the minimum and maximum date of the events of this study
+	 * @return  A map containing absolute minDate and maxDate (not relative)
+	 */
+	def getMinMaxEventDate() {
+		long minDate = Long.MAX_VALUE;
+		long maxDate = Long.MIN_VALUE;
+		this.events.each {
+			if(it.startTime < minDate) {
+				minDate = it.startTime;
+			}
+			if(it.endTime > maxDate) {
+				maxDate = it.endTime;
+			}
+			if(it.startTime > maxDate) {
+				maxDate = it.startTime;
+			}
+		}
+		this.samplingEvents.each {
+			if(it.startTime < minDate) {
+				minDate = it.startTime;
+			}
+			if(it.startTime > maxDate) {
+				maxDate = it.startTime;
+			}
+		}
+		long lngStartDate  = (Long) this.startDate.getTime();
+		return ["minDate" : new Date( lngStartDate + minDate * 1000 ), "maxDate" : new Date( lngStartDate + maxDate * 1000 )];
+	}
 
-    // This closure is used in the before{Insert,Update,Delete} closures below.
-    // It is necessary to prevent flushing in the same session as a top level
-    // database action such as 'save' or 'addTo...'. This confuses hibernate and
-    // produces hard to trace errors.
-    // The same holds for flushing during validation (but that's not the case
-    // here).
-    // http://grails.1312388.n4.nabble.com/Grails-hibernate-flush-causes-IndexOutOfBoundsException-td3031979.html
-    static manualFlush(closure) {
-        withSession {session ->
-            def save
-            try {
-                save = session.flushMode
-                session.flushMode = org.hibernate.FlushMode.MANUAL
-                closure()
-            } finally {
-                if (save) {
-                    session.flushMode = save
-                }
-         }
-        }
-    }
+	// This closure is used in the before{Insert,Update,Delete} closures below.
+	// It is necessary to prevent flushing in the same session as a top level
+	// database action such as 'save' or 'addTo...'. This confuses hibernate and
+	// produces hard to trace errors.
+	// The same holds for flushing during validation (but that's not the case
+	// here).
+	// http://grails.1312388.n4.nabble.com/Grails-hibernate-flush-causes-IndexOutOfBoundsException-td3031979.html
+	static manualFlush(closure) {
+		withSession {session ->
+			def save
+			try {
+				save = session.flushMode
+				session.flushMode = org.hibernate.FlushMode.MANUAL
+				closure()
+			} finally {
+				if (save) {
+					session.flushMode = save
+				}
+			}
+		}
+	}
 
 	// Send messages to modules about changes in this study
 	def beforeInsert = {
-        manualFlush{
-            moduleNotificationService?.invalidateStudy( this )
-        }
+		manualFlush{
+			moduleNotificationService?.invalidateStudy( this )
+		}
 	}
 	def beforeUpdate = {
-        manualFlush{
-            moduleNotificationService?.invalidateStudy( this )
-        }
+		manualFlush{
+			moduleNotificationService?.invalidateStudy( this )
+		}
 	}
 	def beforeDelete = {
 		manualFlush{
-            moduleNotificationService?.invalidateStudy( this )
-        }
+			moduleNotificationService?.invalidateStudy( this )
+		}
 	}
 
-    /**
-     * return the unique species
-     * @see dbnp.query.StudyCompareController
-     */
-    def uniqueSpecies = {
-        return subjects.collect{ it.species }.unique()
-    }
+	/**
+	 * return the unique species
+	 * @see dbnp.query.StudyCompareController
+	 */
+	def uniqueSpecies = {
+		return subjects.collect{ it.species }.unique()
+	}
 
-    /**
-     * return the unique event templates
-     * @see dbnp.query.StudyCompareController
-     */
-    def uniqueEventTemplates = {
-        return events.collect{ it.template }.unique()
-    }
+	/**
+	 * return the unique event templates
+	 * @see dbnp.query.StudyCompareController
+	 */
+	def uniqueEventTemplates = {
+		return events.collect{ it.template }.unique()
+	}
 
-    /**
-     * return the unique sampling event templates
-     * @see dbnp.query.StudyCompareController
-     */
-    def uniqueSamplingEventTemplates = {
-        return samplingEvents.collect{ it.template }.unique()
-    }
+	/**
+	 * return the unique sampling event templates
+	 * @see dbnp.query.StudyCompareController
+	 */
+	def uniqueSamplingEventTemplates = {
+		return samplingEvents.collect{ it.template }.unique()
+	}
 
-    /**
-     * return the unique assay modules
-     * @see dbnp.query.StudyCompareController
-     */
-    def uniqueAssayModules = {
-        return assays.collect{ it.module }.unique()
-    }
+	/**
+	 * return the unique assay modules
+	 * @see dbnp.query.StudyCompareController
+	 */
+	def uniqueAssayModules = {
+		return assays.collect{ it.module }.unique()
+	}
 
-    public String viewUrl() {
+	public String viewUrl() {
 		throw new UnsupportedOperationException("Not implemented");
 	}
 }
