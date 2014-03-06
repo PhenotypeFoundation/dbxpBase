@@ -19,14 +19,15 @@ class Sample extends TemplateEntity {
             parentSubject: Subject,
 
             // Also, it has a parent SamplingEvent describing the actual sampling, also within the same parent study.
-            parentEvent: SamplingEvent,
+            parentEvent: SamplingEventInEventGroup,
 
-            // And it has a parent EventGroup which tied it to its parent subject and parent event
-            parentEventGroup: EventGroup
+            // And it has a parent SubjectEventGroup which tied it to its parent subject and parent event
+            parentSubjectEventGroup: SubjectEventGroup,
 
             // We can't have parentAssay since a Sample can belong to multiple Assays
-    ]
 
+    ]
+	
     String name             // should be unique with respect to the parent study (which can be inferred)
     Term material            // material of the sample (should normally be bound to the BRENDA ontology)
 
@@ -60,8 +61,8 @@ class Sample extends TemplateEntity {
         // The same holds for parentEvent
         parentEvent(nullable: true)
 
-        // and for parentEventGroup
-        parentEventGroup(nullable: true)
+        // and for parentSubjectEventGroup
+        parentSubjectEventGroup(nullable: true)
 
         // The material domain field is optional
         material(nullable: true)
@@ -79,21 +80,17 @@ class Sample extends TemplateEntity {
             def error = false
 
             // check whether obj.parent.samples is not null at this stage to avoid null pointer exception
-            if (obj.parent) {
-
-                if (obj.parent.samples) {
-
-                    // check if there is exactly one sample with this name in the study (this one)
-                    if (obj.parent.samples.findAll { it.name == obj.name}.size() > 1) {
-                        error = true
-                        errors.rejectValue(
-                                'name',
-                                'sample.UniqueNameViolation',
-                                [obj.name, obj.parent] as Object[],
-                                'Sample name {0} appears multiple times in study {1}'
-                        )
+            if (obj.parent && obj.parent.samples ) {
+                // check if there is exactly one sample with this name in the study (this one)
+                if (obj.parent.samples.findAll { it.name == obj.name }.size() > 1) {
+                    error = true
+                    errors.rejectValue(
+                            'name',
+                            'sample.UniqueNameViolation',
+                            [obj.name, obj.parent] as Object[],
+                            'Sample name {0} appears multiple times in study {1}'
+                    )
                     }
-                }
             }
             else {
                 // if there is no parent study defined, fail immediately
@@ -117,6 +114,16 @@ class Sample extends TemplateEntity {
 
     public String getSubjectName() {
         parentSubject.name
+    }
+
+    public EventGroup getEventGroup() {
+        if( parentEvent ) {
+            return sample.parentEvent.eventGroup
+        } else if( sample.SubjectEventGroup ) {
+            return sample.parentSubjectEventGroup.eventGroup
+        } else {
+            return null
+        }
     }
 
     static getSamplesFor(event) {
@@ -193,23 +200,20 @@ class Sample extends TemplateEntity {
         return showSamples
     }
 
-    public static String generateSampleName(flow, subject, eventGroup, samplingEvent) {
-        def samplingEventName = samplingEvent.template.name
-        def eventGroupName = eventGroup.name
-        def sampleTemplateName = (samplingEvent.sampleTemplate) ? samplingEvent.sampleTemplate.name : ''
-        def sampleName = (subject.name + '--' + samplingEventName + '--' + eventGroupName + '--' + new RelTime(samplingEvent.startTime).toString() + '--' + sampleTemplateName).replaceAll("([ ]{1,})", "_")
-        def tempSampleIterator = 0
-        def tempSampleName = sampleName
-
-        // make sure sampleName is unique
-        if (flow.study.samples) {
-            while (flow.study.samples.find { it.name == tempSampleName }) {
-                tempSampleIterator++
-                tempSampleName = sampleName + "_" + tempSampleIterator
-            }
-            sampleName = tempSampleName
-        }
-        return sampleName
+    public String generateName() {
+		if( parentSubject && parentEvent && parentSubjectEventGroup) {
+			def subjectName = ucwords( parentSubject.name )
+			def eventGroupName = ucwords( parentSubjectEventGroup?.eventGroup?.name).replaceAll("([ ]{1,})", "")
+			def sampleTemplateName = ucwords(parentEvent?.event.template?.name)
+			
+			def subjectEventGroupStartTime = parentSubjectEventGroup ? parentSubjectEventGroup.startTime : '0'
+			def samplingEventInstanceStartTime = parentEvent ? parentEvent.startTime : '0'
+			
+			def startTime = new RelTime( subjectEventGroupStartTime + samplingEventInstanceStartTime ).toString()
+			
+			this.name = ( subjectName + "_" + eventGroupName + "_" + sampleTemplateName + "_" + startTime ).replaceAll( " ", "_" )
+		}
+		return this.name
     }
 
     /**
@@ -223,6 +227,9 @@ class Sample extends TemplateEntity {
     public static ucwords(String text) {
         def newText = ''
 
+		if( !text )
+			return ""
+		
         // change case to lowercase
         text = text.toLowerCase()
 

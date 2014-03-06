@@ -19,20 +19,18 @@ class SamplingEvent extends TemplateEntity {
 	// Otherwise, Grails expects the SamplingEvent to be referenced in Study.events,
 	// where it is actually referenced in Study.samplingEvents
 	static belongsTo = [parent : Study]
-	static hasMany = [samples : Sample]
+	static hasMany = [
+		eventGroupInstances: SamplingEventInEventGroup 
+	]
 
-	/** Start time of the event, relative to the start time of the study */
-	long startTime
-
-	/** Duration of the sampling event, if it has any (default is 0) */
-	long duration
 
 	// define what template samples should have
+	String name
 	Template sampleTemplate
 
 	// define domain constraints
 	static constraints = {
-		duration(default: 0L)
+		name nullable: true
 		sampleTemplate(nullable: false, blank: false)
 	}
 
@@ -46,14 +44,9 @@ class SamplingEvent extends TemplateEntity {
 	// To improve performance, the domain fields list is stored as a static final variable in the class.
 	static final List<TemplateField> domainFields = [
 		new TemplateField(
-			name: 'startTime',
-			type: TemplateFieldType.RELTIME,
-			comment: "Please enter the start time as a relative time from study start date."+RelTime.getHelpText(),
-			required: true),
-		new TemplateField(
-			name: 'duration',
-			type: TemplateFieldType.RELTIME,
-			comment: "Please enter the duration of the sampling action, if applicable. "+RelTime.getHelpText(),
+			name: 'name',
+			type: TemplateFieldType.STRING,
+			comment: "Please enter the name of the sampling event.",
 			required: true),
 		new TemplateField(
 			name: 'sampleTemplate',
@@ -68,14 +61,6 @@ class SamplingEvent extends TemplateEntity {
             templateTextFields type: 'text'
         }
 
-	 /**
-	  * Return the start time of the event, which should be relative to the start of the study
-	  * @return String a human readable representation of the start time of the event
-	 */
-	def getStartTimeString() {
-		return new RelTime(startTime).toPrettyString();
-	}
-
 	/**
 	 * Checks whether this Event is part of one or more of the given EventGroups
 	 * @param groups
@@ -85,8 +70,8 @@ class SamplingEvent extends TemplateEntity {
 		def eventFound = false;
 		def that = this;
 		groups.each { eventgroup ->
-			if (!eventFound && eventgroup.samplingEvents) {
-				eventFound = (that.id in eventgroup.samplingEvents.id);
+			if (!eventFound && eventgroup.samplingEventInstances) {
+				eventFound = (that.id in eventgroup.samplingEventInstances*.event.id);
 			}
 		}
 
@@ -94,9 +79,7 @@ class SamplingEvent extends TemplateEntity {
 	}
 
 	def String toString() {
-        return fieldExists('Description') ?
-            getFieldValue('Description') :
-            "start: " + getStartTimeString()
+        return name
 	}
 	
 }

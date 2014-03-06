@@ -12,8 +12,12 @@ import org.dbnp.gdt.*
  */
 class Subject extends TemplateEntity {
 	// A Subject always belongs to one Study
-	static belongsTo = [parent: Study]
-
+	static belongsTo = [Study, SubjectGroup]
+	static hasMany = [subjectGroups: SubjectGroup]
+	
+	/** The study this subject belongs to */
+	Study parent
+	
 	/** The name of the subject, which should be unique within the study   */
 	String name
 
@@ -70,7 +74,7 @@ class Subject extends TemplateEntity {
 	 *
 	 * @param subjectList List with Subject objects
 	 * @param maxChars maximum number of characters returned
-	 * @return human readble string with at most maxChars characters, representing the subjects given.
+	 * @return human readable string with at most maxChars characters, representing the subjects given.
 	 */
 	public static String trimSubjectNames(ArrayList subjectList, Integer maxChars) {
 		def simpleSubjects = subjectList.name.join(', ');
