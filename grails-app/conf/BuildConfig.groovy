@@ -13,7 +13,6 @@ grails.project.dependency.resolution = {
         grailsCentral()
         grailsRepo "http://grails.org/plugins"
         mavenRepo "http://nexus.dbnp.org/content/repositories/releases"
-        mavenRepo "http://ontocat.sourceforge.net/maven/repo"
 
         // uncomment the below to enable remote dependency resolution
         // from public Maven repositories
