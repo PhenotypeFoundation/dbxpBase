@@ -27,7 +27,7 @@ class Sample extends TemplateEntity {
             // We can't have parentAssay since a Sample can belong to multiple Assays
 
     ]
-	
+
     String name             // should be unique with respect to the parent study (which can be inferred)
     Term material            // material of the sample (should normally be bound to the BRENDA ontology)
 
@@ -108,12 +108,12 @@ class Sample extends TemplateEntity {
         // Workaround for bug http://jira.codehaus.org/browse/GRAILS-6754
 	}
 
-    public long getSamplingTime() {
-        parentEvent.startTime
+    def getSamplingTime() {
+        parentEvent?.startTime
     }
 
     public String getSubjectName() {
-        parentSubject.name
+        parentSubject?.name
     }
 
     public EventGroup getEventGroup() {
@@ -205,12 +205,12 @@ class Sample extends TemplateEntity {
 			def subjectName = ucwords( parentSubject.name )
 			def eventGroupName = ucwords( parentSubjectEventGroup?.eventGroup?.name).replaceAll("([ ]{1,})", "")
 			def sampleTemplateName = ucwords(parentEvent?.event.template?.name)
-			
+
 			def subjectEventGroupStartTime = parentSubjectEventGroup ? parentSubjectEventGroup.startTime : '0'
 			def samplingEventInstanceStartTime = parentEvent ? parentEvent.startTime : '0'
-			
+
 			def startTime = new RelTime( subjectEventGroupStartTime + samplingEventInstanceStartTime ).toString()
-			
+
 			this.name = ( subjectName + "_" + eventGroupName + "_" + sampleTemplateName + "_" + startTime ).replaceAll( " ", "_" )
 		}
 		return this.name
@@ -229,7 +229,7 @@ class Sample extends TemplateEntity {
 
 		if( !text )
 			return ""
-		
+
         // change case to lowercase
         text = text.toLowerCase()
 
