@@ -45,7 +45,7 @@ grails.project.dependency.resolution = {
         }
 
         compile(
-        ":gdt:0.4.2.7.rc1",
+        ":gdt:0.4.2.7.rc2",
 		":hibernate:$grailsVersion",
                 ":ajaxflow:latest.integration",
                 ":jquery:latest.integration",
