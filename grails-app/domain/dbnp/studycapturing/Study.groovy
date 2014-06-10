@@ -305,8 +305,9 @@ class Study extends TemplateEntity {
 		// remove the sample from the study
 		this.removeFromSamples(sample)
 
-        // Delete SAMSample association
-        SAMSample.executeUpdate("delete SAMSample s where s.parentSample = :sample", [sample: sample])
+		// Delete Measurements and SAMSample associations
+		Measurement.executeUpdate( "delete Measurement m where m.id IN ( SELECT m2.id FROM Measurement m2 WHERE m.sample.parentSample = :sample )", [sample: sample] )
+		SAMSample.executeUpdate("delete SAMSample s where s.parentSample = :sample", [sample: sample] )
 
 		// remove the sample from any sampling events it belongs to
 		this.samplingEvents.findAll { it.samples.any { it == sample }}.each {
