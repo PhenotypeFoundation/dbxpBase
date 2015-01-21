@@ -275,7 +275,11 @@ class Study extends TemplateEntity {
      * @void
      */
     def clearSAMDependencies() {
-        SAMSample.where{parentSample in (samples) ? samples : [] || parentAssay in (assays) ? assays : []}.list()*.delete()
+		// There can only be SAM dependencies if the study has samples and assays
+		if( samples && assays ) {
+			Measurement.executeUpdate( "DELETE Measurement m where m.id IN( SELECT m2.id FROM Measurement m2 WHERE m2.sample.parentSample IN (:samples ) and m2.sample.parentAssay in (:assays) )", [samples: samples, assays: assays] )
+			SAMSample.executeUpdate("delete SAMSample s where s.parentSample IN (:samples) AND s.parentAssay in (:assays)", [samples: samples, assays: assays] )
+		}
     }
 
 	/**
