@@ -18,15 +18,8 @@ grails.project.dependency.resolution = {
         // from public Maven repositories
         mavenLocal()
         mavenCentral()
-        mavenRepo "http://snapshots.repository.codehaus.org"
-        mavenRepo "http://repository.codehaus.org"
-        mavenRepo "http://download.java.net/maven/2/"
-        mavenRepo "http://repository.jboss.com/maven2/"
 
-        mavenRepo "http://repository.springsource.com/maven/bundles/release"
-        mavenRepo "http://repository.springsource.com/maven/bundles/external"
-        mavenRepo "http://repository.springsource.com/maven/libraries/release"
-        mavenRepo "http://repository.springsource.com/maven/libraries/external"
+//	mavenRepo "http://repo.grails.org/grails/repo/"
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
@@ -44,7 +37,7 @@ grails.project.dependency.resolution = {
         }
 
         compile(
-        ":gdt:0.5.0.4",
+        ":gdt:0.5.0.5",
         ":rest:0.8",
 		":hibernate:$grailsVersion",
                 ":ajaxflow:latest.integration",
